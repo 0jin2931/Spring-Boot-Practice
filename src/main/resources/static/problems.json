@@ -1,0 +1,690 @@
+[
+{
+"id": 1,
+"level": "초급",
+"topic": "Controller",
+"title": "Hello API",
+"desc": "GET /hello 요청 시 문자열 \"Hello, Spring!\"을 반환하는 컨트롤러를 작성하세요.",
+"hint": "@RestController, @GetMapping",
+"checklist": [
+"@RestController 사용",
+"@GetMapping(\"/hello\") 매핑",
+"문자열 반환"
+],
+"solution": "@RestController\npublic class HelloController {\n    @GetMapping(\"/hello\")\n    public String hello() {\n        return \"Hello, Spring!\";\n    }\n}"
+},
+{
+"id": 2,
+"level": "초급",
+"topic": "Controller",
+"title": "PathVariable",
+"desc": "GET /users/{id} 요청 시 \"user-{id}\"를 반환하세요. id는 Long 타입.",
+"hint": "@PathVariable",
+"checklist": [
+"@PathVariable Long id",
+"@GetMapping(\"/users/{id}\")",
+"문자열 조합 반환"
+],
+"solution": "@GetMapping(\"/users/{id}\")\npublic String user(@PathVariable Long id) {\n    return \"user-\" + id;\n}"
+},
+{
+"id": 3,
+"level": "초급",
+"topic": "Controller",
+"title": "RequestParam 기본값",
+"desc": "GET /greet?name=Kim 형태로 이름을 받아 \"Hi, Kim\"을 반환하세요. name이 없으면 \"Guest\"를 사용합니다.",
+"hint": "@RequestParam defaultValue",
+"checklist": [
+"@RequestParam 사용",
+"defaultValue=\"Guest\" 지정"
+],
+"solution": "@GetMapping(\"/greet\")\npublic String greet(@RequestParam(defaultValue = \"Guest\") String name) {\n    return \"Hi, \" + name;\n}"
+},
+{
+"id": 4,
+"level": "중급",
+"topic": "JPA",
+"title": "Entity와 Repository",
+"desc": "Book(id, title, price) 엔티티와 title로 조회하는 Repository 메서드를 작성하세요.",
+"hint": "@Entity, @Id, JpaRepository, 메서드 이름 쿼리",
+"checklist": [
+"@Entity + @Id @GeneratedValue",
+"JpaRepository<Book, Long> 상속",
+"List<Book> findByTitle(String title) 선언"
+],
+"solution": "@Entity\npublic class Book {\n    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)\n    private Long id;\n    private String title;\n    private int price;\n    // getter/setter\n}\n\npublic interface BookRepository extends JpaRepository<Book, Long> {\n    List<Book> findByTitle(String title);\n}"
+},
+{
+"id": 5,
+"level": "중급",
+"topic": "Validation",
+"title": "요청 검증",
+"desc": "POST /members 요청 본문 MemberRequest(name 필수, age 1 이상)를 검증하고 잘못되면 400이 나오도록 작성하세요.",
+"hint": "@Valid, @NotBlank, @Min",
+"checklist": [
+"DTO에 @NotBlank, @Min(1)",
+"컨트롤러 파라미터에 @Valid @RequestBody",
+"spring-boot-starter-validation 의존성"
+],
+"solution": "public record MemberRequest(@NotBlank String name, @Min(1) int age) {}\n\n@PostMapping(\"/members\")\npublic ResponseEntity<Void> create(@Valid @RequestBody MemberRequest req) {\n    return ResponseEntity.status(HttpStatus.CREATED).build();\n}"
+},
+{
+"id": 6,
+"level": "중급",
+"topic": "예외처리",
+"title": "전역 예외 처리",
+"desc": "NoSuchElementException 발생 시 404와 메시지를 JSON으로 반환하는 전역 핸들러를 작성하세요.",
+"hint": "@RestControllerAdvice, @ExceptionHandler",
+"checklist": [
+"@RestControllerAdvice 클래스",
+"@ExceptionHandler(NoSuchElementException.class)",
+"404 상태코드 반환"
+],
+"solution": "@RestControllerAdvice\npublic class GlobalHandler {\n    @ExceptionHandler(NoSuchElementException.class)\n    public ResponseEntity<Map<String, String>> notFound(NoSuchElementException e) {\n        return ResponseEntity.status(HttpStatus.NOT_FOUND)\n                .body(Map.of(\"message\", e.getMessage()));\n    }\n}"
+},
+{
+"id": 7,
+"level": "고급",
+"topic": "JPA",
+"title": "N+1 해결",
+"desc": "Team(1) - Member(N) 구조에서 팀 목록 조회 시 멤버를 함께 가져와 N+1을 방지하는 Repository 메서드를 작성하세요.",
+"hint": "fetch join 또는 @EntityGraph",
+"checklist": [
+"LAZY 연관관계",
+"JPQL fetch join 또는 @EntityGraph 사용",
+"중복 제거(distinct)"
+],
+"solution": "public interface TeamRepository extends JpaRepository<Team, Long> {\n    @Query(\"select distinct t from Team t join fetch t.members\")\n    List<Team> findAllWithMembers();\n}"
+},
+{
+"id": 8,
+"level": "고급",
+"topic": "트랜잭션",
+"title": "트랜잭션 롤백",
+"desc": "송금 서비스에서 출금 후 예외 발생 시 입금 전체가 롤백되도록 작성하세요. (체크 예외도 롤백)",
+"hint": "@Transactional(rollbackFor)",
+"checklist": [
+"서비스 메서드에 @Transactional",
+"rollbackFor = Exception.class",
+"같은 클래스 내부 호출 주의(프록시)"
+],
+"solution": "@Service\npublic class TransferService {\n    @Transactional(rollbackFor = Exception.class)\n    public void transfer(Long from, Long to, long amount) throws Exception {\n        accountRepo.withdraw(from, amount);\n        accountRepo.deposit(to, amount);\n    }\n}"
+},
+{
+"id": 9,
+"level": "고급",
+"topic": "페이징",
+"title": "페이징 API",
+"desc": "GET /books?page=0&size=10&sort=price,desc 요청을 처리하는 API를 작성하세요.",
+"hint": "Pageable, Page<T>",
+"checklist": [
+"Pageable 파라미터 사용",
+"Page<Book> 반환",
+"repository.findAll(pageable)"
+],
+"solution": "@GetMapping(\"/books\")\npublic Page<Book> books(Pageable pageable) {\n    return bookRepository.findAll(pageable);\n}"
+},
+{
+"id": 10,
+"level": "초급",
+"topic": "Controller",
+"title": "POST로 JSON 받기",
+"desc": "POST /items 로 {\"name\":\"pen\",\"price\":500} 를 받아 201 Created 와 받은 이름을 반환하세요. (요청 DTO는 record)",
+"hint": "@PostMapping, @RequestBody, ResponseEntity",
+"checklist": [
+"record DTO 선언",
+"@RequestBody 사용",
+"201 상태코드 반환"
+],
+"solution": "public record ItemRequest(String name, int price) {}\n\n@PostMapping(\"/items\")\npublic ResponseEntity<String> create(@RequestBody ItemRequest req) {\n    return ResponseEntity.status(HttpStatus.CREATED).body(req.name());\n}"
+},
+{
+"id": 11,
+"level": "초급",
+"topic": "DI",
+"title": "생성자 주입",
+"desc": "OrderService가 OrderRepository를 생성자 주입으로 받도록 작성하세요. (필드 주입 금지)",
+"hint": "final 필드 + 생성자 (또는 Lombok @RequiredArgsConstructor)",
+"checklist": [
+"@Service 선언",
+"private final 필드",
+"생성자로 주입(@Autowired 필드 사용 X)"
+],
+"solution": "@Service\npublic class OrderService {\n    private final OrderRepository orderRepository;\n\n    public OrderService(OrderRepository orderRepository) {\n        this.orderRepository = orderRepository;\n    }\n}"
+},
+{
+"id": 12,
+"level": "초급",
+"topic": "설정",
+"title": "프로퍼티 값 주입",
+"desc": "application.properties 의 app.name 값을 클래스 필드로 읽어오세요. 없으면 \"quiz\" 를 기본값으로 사용합니다.",
+"hint": "@Value, 기본값 문법 ${key:default}",
+"checklist": [
+"@Component 등 빈 등록",
+"@Value(\"${app.name:quiz}\")"
+],
+"solution": "@Component\npublic class AppInfo {\n    @Value(\"${app.name:quiz}\")\n    private String name;\n}"
+},
+{
+"id": 13,
+"level": "초급",
+"topic": "Controller",
+"title": "404 응답",
+"desc": "GET /items/{id} 에서 id 가 99 이면 404, 그 외에는 200 과 \"ok\" 를 반환하세요.",
+"hint": "ResponseEntity.notFound(), ResponseEntity.ok()",
+"checklist": [
+"반환 타입 ResponseEntity<String>",
+"조건 분기로 404 반환",
+"200은 ResponseEntity.ok"
+],
+"solution": "@GetMapping(\"/items/{id}\")\npublic ResponseEntity<String> get(@PathVariable Long id) {\n    if (id == 99) return ResponseEntity.notFound().build();\n    return ResponseEntity.ok(\"ok\");\n}"
+},
+{
+"id": 14,
+"level": "중급",
+"topic": "JPA",
+"title": "수정(PUT) API",
+"desc": "PUT /books/{id} 로 제목과 가격을 수정하세요. 없는 id 면 예외를 던집니다.",
+"hint": "findById, orElseThrow, 변경 감지(더티 체킹)",
+"checklist": [
+"@Transactional 사용",
+"findById(...).orElseThrow(...)",
+"setter/변경 메서드로 값 변경(save 없이도 반영)"
+],
+"solution": "@Transactional\npublic Book update(Long id, BookRequest req) {\n    Book book = bookRepository.findById(id)\n            .orElseThrow(() -> new NoSuchElementException(\"book \" + id));\n    book.change(req.title(), req.price());\n    return book;\n}"
+},
+{
+"id": 15,
+"level": "중급",
+"topic": "JPA",
+"title": "쿼리 메서드",
+"desc": "가격이 min 이상 max 이하인 Book 을 가격 내림차순으로 조회하는 Repository 메서드를 선언하세요.",
+"hint": "findBy...Between...OrderBy...Desc",
+"checklist": [
+"Between 사용",
+"OrderByPriceDesc 사용",
+"List<Book> 반환"
+],
+"solution": "List<Book> findByPriceBetweenOrderByPriceDesc(int min, int max);"
+},
+{
+"id": 16,
+"level": "중급",
+"topic": "DTO",
+"title": "Entity → DTO 변환",
+"desc": "Book 엔티티를 BookResponse(id, title) record 로 변환하는 정적 팩토리 메서드를 작성하고, 컨트롤러에서 엔티티를 직접 반환하지 않도록 하세요.",
+"hint": "record + static from(), stream().map",
+"checklist": [
+"record DTO",
+"static from(Book) 메서드",
+"컨트롤러는 DTO 반환"
+],
+"solution": "public record BookResponse(Long id, String title) {\n    public static BookResponse from(Book b) {\n        return new BookResponse(b.getId(), b.getTitle());\n    }\n}\n\n@GetMapping(\"/books\")\npublic List<BookResponse> list() {\n    return bookRepository.findAll().stream().map(BookResponse::from).toList();\n}"
+},
+{
+"id": 17,
+"level": "중급",
+"topic": "설정",
+"title": "@Bean 등록",
+"desc": "외부 라이브러리 클래스 Clock 을 빈으로 등록하는 설정 클래스를 작성하세요.",
+"hint": "@Configuration, @Bean",
+"checklist": [
+"@Configuration 클래스",
+"@Bean 메서드",
+"Clock.systemDefaultZone() 반환"
+],
+"solution": "@Configuration\npublic class AppConfig {\n    @Bean\n    public Clock clock() {\n        return Clock.systemDefaultZone();\n    }\n}"
+},
+{
+"id": 18,
+"level": "중급",
+"topic": "Interceptor",
+"title": "요청 로깅 인터셉터",
+"desc": "모든 요청의 메서드와 URI 를 로그로 남기는 HandlerInterceptor 를 만들고 등록하세요.",
+"hint": "HandlerInterceptor.preHandle, WebMvcConfigurer.addInterceptors",
+"checklist": [
+"HandlerInterceptor 구현",
+"preHandle 에서 true 반환",
+"WebMvcConfigurer 로 등록"
+],
+"solution": "@Component\npublic class LogInterceptor implements HandlerInterceptor {\n    private static final Logger log = LoggerFactory.getLogger(LogInterceptor.class);\n    @Override\n    public boolean preHandle(HttpServletRequest req, HttpServletResponse res, Object h) {\n        log.info(\"{} {}\", req.getMethod(), req.getRequestURI());\n        return true;\n    }\n}\n\n@Configuration\npublic class WebConfig implements WebMvcConfigurer {\n    private final LogInterceptor interceptor;\n    public WebConfig(LogInterceptor i) { this.interceptor = i; }\n    @Override\n    public void addInterceptors(InterceptorRegistry r) { r.addInterceptor(interceptor); }\n}"
+},
+{
+"id": 19,
+"level": "고급",
+"topic": "JPA",
+"title": "양방향 연관관계",
+"desc": "Team 삭제 시 Member 도 함께 삭제되고, 팀에서 제거된 Member 도 삭제되도록 연관관계를 설정하세요. 편의 메서드도 작성합니다.",
+"hint": "cascade = ALL, orphanRemoval = true, 연관관계 편의 메서드",
+"checklist": [
+"mappedBy 로 연관관계 주인 지정",
+"cascade ALL + orphanRemoval true",
+"addMember 에서 양쪽 값 설정"
+],
+"solution": "@Entity\npublic class Team {\n    @Id @GeneratedValue private Long id;\n    @OneToMany(mappedBy = \"team\", cascade = CascadeType.ALL, orphanRemoval = true)\n    private List<Member> members = new ArrayList<>();\n\n    public void addMember(Member m) {\n        members.add(m);\n        m.setTeam(this);\n    }\n}"
+},
+{
+"id": 20,
+"level": "고급",
+"topic": "Security",
+"title": "JWT 인증 필터",
+"desc": "Authorization: Bearer 토큰을 검사하는 필터를 만드세요. 토큰이 유효하지 않으면 401 을 반환합니다. (요청당 한 번만 실행)",
+"hint": "OncePerRequestFilter, doFilterInternal",
+"checklist": [
+"OncePerRequestFilter 상속",
+"헤더에서 Bearer 토큰 추출",
+"유효하지 않으면 401 후 return",
+"유효하면 filterChain.doFilter 호출"
+],
+"solution": "@Component\npublic class JwtFilter extends OncePerRequestFilter {\n    private final JwtProvider provider;\n    public JwtFilter(JwtProvider provider) { this.provider = provider; }\n\n    @Override\n    protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)\n            throws ServletException, IOException {\n        String h = req.getHeader(\"Authorization\");\n        if (h == null || !h.startsWith(\"Bearer \") || !provider.validate(h.substring(7))) {\n            res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);\n            return;\n        }\n        chain.doFilter(req, res);\n    }\n}"
+},
+{
+"id": 21,
+"level": "고급",
+"topic": "Security",
+"title": "SecurityFilterChain",
+"desc": "/api/public/** 은 모두 허용하고 나머지는 인증이 필요하도록, CSRF 는 끄고 세션은 사용하지 않는 설정을 작성하세요.",
+"hint": "SecurityFilterChain 빈, authorizeHttpRequests, STATELESS",
+"checklist": [
+"SecurityFilterChain @Bean",
+"/api/public/** permitAll",
+"anyRequest().authenticated()",
+"csrf disable + STATELESS"
+],
+"solution": "@Bean\npublic SecurityFilterChain filterChain(HttpSecurity http) throws Exception {\n    http.csrf(c -> c.disable())\n        .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))\n        .authorizeHttpRequests(a -> a\n            .requestMatchers(\"/api/public/**\").permitAll()\n            .anyRequest().authenticated());\n    return http.build();\n}"
+},
+{
+"id": 22,
+"level": "고급",
+"topic": "테스트",
+"title": "MockMvc 컨트롤러 테스트",
+"desc": "GET /hello 가 200 과 \"Hello, Spring!\" 을 반환하는지 검증하는 테스트를 작성하세요. (웹 계층만 로드)",
+"hint": "@WebMvcTest, MockMvc.perform",
+"checklist": [
+"@WebMvcTest(HelloController.class)",
+"MockMvc 주입",
+"status().isOk() 와 content() 검증"
+],
+"solution": "@WebMvcTest(HelloController.class)\nclass HelloControllerTest {\n    @Autowired MockMvc mvc;\n\n    @Test\n    void hello() throws Exception {\n        mvc.perform(get(\"/hello\"))\n           .andExpect(status().isOk())\n           .andExpect(content().string(\"Hello, Spring!\"));\n    }\n}"
+},
+{
+"id": 23,
+"level": "고급",
+"topic": "Validation",
+"title": "커스텀 검증 어노테이션",
+"desc": "휴대폰 번호(010-0000-0000 형식)를 검증하는 @Phone 어노테이션과 Validator 를 작성하세요.",
+"hint": "@Constraint(validatedBy), ConstraintValidator",
+"checklist": [
+"@Constraint 가 붙은 @interface",
+"message, groups, payload 선언",
+"ConstraintValidator 구현 + 정규식"
+],
+"solution": "@Target(FIELD) @Retention(RUNTIME)\n@Constraint(validatedBy = PhoneValidator.class)\npublic @interface Phone {\n    String message() default \"잘못된 휴대폰 번호\";\n    Class<?>[] groups() default {};\n    Class<? extends Payload>[] payload() default {};\n}\n\npublic class PhoneValidator implements ConstraintValidator<Phone, String> {\n    @Override\n    public boolean isValid(String v, ConstraintValidatorContext c) {\n        return v != null && v.matches(\"010-\\\\d{4}-\\\\d{4}\");\n    }\n}"
+},
+{
+"id": 24,
+"level": "고급",
+"topic": "트랜잭션",
+"title": "읽기 전용 트랜잭션",
+"desc": "조회 전용 서비스 클래스에 읽기 전용 트랜잭션을 적용하고, 쓰기 메서드만 별도로 쓰기 가능하게 하세요.",
+"hint": "클래스 레벨 readOnly = true, 메서드 레벨 override",
+"checklist": [
+"클래스에 @Transactional(readOnly = true)",
+"쓰기 메서드에 @Transactional 재선언"
+],
+"solution": "@Service\n@Transactional(readOnly = true)\npublic class BookService {\n    public List<Book> findAll() { return repo.findAll(); }\n\n    @Transactional\n    public Book save(Book b) { return repo.save(b); }\n}"
+},
+{
+"id": 25,
+"level": "초급",
+"topic": "Controller",
+"title": "[빈칸] Hello 컨트롤러",
+"desc": "빈칸을 채워 GET /hello 가 문자열을 반환하는 컨트롤러를 완성하세요.",
+"hint": "JSON/문자열을 바로 반환하는 컨트롤러 어노테이션",
+"checklist": [],
+"solution": "@RestController\npublic class HelloController {\n    @GetMapping(\"/hello\")\n    public String hello() {\n        return \"Hello\";\n    }\n}",
+"type": "blank",
+"answers": [
+"@RestController",
+"@GetMapping"
+],
+"code": "____\npublic class HelloController {\n    ____(\"/hello\")\n    public String hello() {\n        return \"Hello\";\n    }\n}"
+},
+{
+"id": 26,
+"level": "초급",
+"topic": "DI",
+"title": "[빈칸] 생성자 주입",
+"desc": "빈칸을 채워 불변 필드 + 생성자 주입을 완성하세요.",
+"hint": "final, this",
+"checklist": [],
+"solution": "@Service\npublic class OrderService {\n    private final OrderRepository repo;\n\n    public OrderService(OrderRepository repo) {\n        this.repo = repo;\n    }\n}",
+"type": "blank",
+"answers": [
+"final",
+"this"
+],
+"code": "@Service\npublic class OrderService {\n    private ____ OrderRepository repo;\n\n    public OrderService(OrderRepository repo) {\n        ____.repo = repo;\n    }\n}"
+},
+{
+"id": 27,
+"level": "중급",
+"topic": "JPA",
+"title": "[빈칸] Repository",
+"desc": "빈칸을 채워 Book 의 Repository 와 제목 조회 메서드를 완성하세요.",
+"hint": "JpaRepository, findBy + 필드명",
+"checklist": [],
+"solution": "public interface BookRepository extends JpaRepository<Book, Long> {\n    List<Book> findByTitle(String title);\n}",
+"type": "blank",
+"answers": [
+"JpaRepository|CrudRepository",
+"findByTitle"
+],
+"code": "public interface BookRepository extends ____<Book, Long> {\n    List<Book> ____(String title);\n}"
+},
+{
+"id": 28,
+"level": "중급",
+"topic": "Validation",
+"title": "[빈칸] 요청 검증",
+"desc": "빈칸을 채워 name 은 비어있지 않고, age 는 1 이상이며, 컨트롤러에서 검증이 수행되도록 하세요.",
+"hint": "@NotBlank, @Min, @Valid",
+"checklist": [],
+"solution": "public record MemberRequest(@NotBlank String name, @Min(1) int age) {}\n\n@PostMapping(\"/members\")\npublic void create(@Valid @RequestBody MemberRequest req) {}",
+"type": "blank",
+"answers": [
+"@NotBlank",
+"@Min",
+"@Valid"
+],
+"code": "public record MemberRequest(____ String name, ____(1) int age) {}\n\n@PostMapping(\"/members\")\npublic void create(____ @RequestBody MemberRequest req) {}"
+},
+{
+"id": 29,
+"level": "고급",
+"topic": "예외처리",
+"title": "[빈칸] 전역 예외 처리",
+"desc": "빈칸을 채워 NoSuchElementException 을 404 로 처리하는 전역 핸들러를 완성하세요.",
+"hint": "@RestControllerAdvice, @ExceptionHandler, HttpStatus",
+"checklist": [],
+"solution": "@RestControllerAdvice\npublic class GlobalHandler {\n    @ExceptionHandler(NoSuchElementException.class)\n    public ResponseEntity<String> nf(NoSuchElementException e) {\n        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());\n    }\n}",
+"type": "blank",
+"answers": [
+"@RestControllerAdvice|@ControllerAdvice",
+"@ExceptionHandler",
+"NOT_FOUND"
+],
+"code": "____\npublic class GlobalHandler {\n    ____(NoSuchElementException.class)\n    public ResponseEntity<String> nf(NoSuchElementException e) {\n        return ResponseEntity.status(HttpStatus.____).body(e.getMessage());\n    }\n}"
+},
+{
+"id": 30,
+"level": "고급",
+"topic": "JPA",
+"title": "[빈칸] fetch join",
+"desc": "빈칸을 채워 Team 과 members 를 한 번의 쿼리로 가져오는 JPQL 을 완성하세요.",
+"hint": "join fetch",
+"checklist": [],
+"solution": "@Query(\"select distinct t from Team t join fetch t.members\")\nList<Team> findAllWithMembers();",
+"type": "blank",
+"answers": [
+"join",
+"fetch"
+],
+"code": "@Query(\"select distinct t from Team t ____ ____ t.members\")\nList<Team> findAllWithMembers();"
+},
+{
+"id": 31,
+"level": "초급",
+"topic": "Controller",
+"title": "[오류 찾기] 문자열이 안 나와요",
+"desc": "GET /hello 로 접속하면 \"Hello\" 가 응답되어야 하는데 View 를 찾지 못해 404 가 납니다. 코드를 고치세요.",
+"hint": "@Controller 는 반환 문자열을 뷰 이름으로 해석합니다",
+"checklist": [
+"@Controller 를 @RestController 로 변경 (또는 메서드에 @ResponseBody)"
+],
+"solution": "@RestController\npublic class HelloController {\n    @GetMapping(\"/hello\")\n    public String hello() {\n        return \"Hello\";\n    }\n}",
+"type": "fix",
+"starter": "@Controller\npublic class HelloController {\n    @GetMapping(\"/hello\")\n    public String hello() {\n        return \"Hello\";\n    }\n}"
+},
+{
+"id": 32,
+"level": "초급",
+"topic": "Controller",
+"title": "[오류 찾기] PathVariable",
+"desc": "GET /users/1 호출 시 오류가 납니다. 원인을 찾아 고치세요.",
+"hint": "URL 변수명과 파라미터 이름을 비교해 보세요",
+"checklist": [
+"URL 변수명과 파라미터 이름 일치 또는 @PathVariable(\"id\") 명시"
+],
+"solution": "@GetMapping(\"/users/{id}\")\npublic String user(@PathVariable(\"id\") Long userId) {\n    return \"user-\" + userId;\n}",
+"type": "fix",
+"starter": "@GetMapping(\"/users/{id}\")\npublic String user(@PathVariable Long userId) {\n    return \"user-\" + userId;\n}"
+},
+{
+"id": 33,
+"level": "중급",
+"topic": "트랜잭션",
+"title": "[오류 찾기] 롤백이 안 돼요",
+"desc": "pay() 를 호출했는데 save() 에서 예외가 나도 롤백되지 않습니다. 이유를 찾아 고치세요.",
+"hint": "@Transactional 은 프록시로 동작합니다",
+"checklist": [
+"같은 클래스 내부 호출은 프록시를 거치지 않는다는 점을 파악",
+"pay() 에 @Transactional 을 붙이거나 다른 빈으로 분리"
+],
+"solution": "@Service\npublic class PayService {\n    @Transactional\n    public void pay() {\n        save();\n    }\n\n    public void save() {\n        repo.save(new Payment());\n        throw new IllegalStateException(\"fail\");\n    }\n}",
+"type": "fix",
+"starter": "@Service\npublic class PayService {\n    public void pay() {\n        save();\n    }\n\n    @Transactional\n    public void save() {\n        repo.save(new Payment());\n        throw new IllegalStateException(\"fail\");\n    }\n}"
+},
+{
+"id": 34,
+"level": "중급",
+"topic": "Validation",
+"title": "[오류 찾기] 항상 400",
+"desc": "JSON 본문 {\"name\":\"kim\",\"age\":20} 을 보냈는데 항상 400(검증 실패)이 납니다. 고치세요.",
+"hint": "JSON 본문은 어떻게 객체로 바인딩할까요?",
+"checklist": [
+"@RequestBody 추가 (없으면 폼 파라미터로 바인딩되어 값이 비어 있음)"
+],
+"solution": "public record MemberRequest(@NotBlank String name, @Min(1) int age) {}\n\n@PostMapping(\"/members\")\npublic ResponseEntity<Void> create(@Valid @RequestBody MemberRequest req) {\n    return ResponseEntity.status(HttpStatus.CREATED).build();\n}",
+"type": "fix",
+"starter": "public record MemberRequest(@NotBlank String name, @Min(1) int age) {}\n\n@PostMapping(\"/members\")\npublic ResponseEntity<Void> create(@Valid MemberRequest req) {\n    return ResponseEntity.status(HttpStatus.CREATED).build();\n}"
+},
+{
+"id": 35,
+"level": "고급",
+"topic": "JPA",
+"title": "[오류 찾기] 무한 순환 참조",
+"desc": "GET /teams 호출 시 JSON 직렬화 중 StackOverflowError 가 발생합니다. 고치세요.",
+"hint": "양방향 연관관계를 그대로 JSON 으로 내보내면?",
+"checklist": [
+"엔티티 대신 DTO 를 반환 (또는 @JsonIgnore 로 순환 끊기)"
+],
+"solution": "public record TeamResponse(Long id, List<Long> memberIds) {\n    public static TeamResponse from(Team t) {\n        return new TeamResponse(t.getId(), t.getMembers().stream().map(Member::getId).toList());\n    }\n}\n\n@GetMapping(\"/teams\")\npublic List<TeamResponse> teams() {\n    return teamRepository.findAll().stream().map(TeamResponse::from).toList();\n}",
+"type": "fix",
+"starter": "@Entity\npublic class Team {\n    @Id @GeneratedValue private Long id;\n    @OneToMany(mappedBy = \"team\")\n    private List<Member> members = new ArrayList<>();\n}\n\n@Entity\npublic class Member {\n    @Id @GeneratedValue private Long id;\n    @ManyToOne\n    private Team team;\n}\n\n@GetMapping(\"/teams\")\npublic List<Team> teams() {\n    return teamRepository.findAll();\n}"
+},
+{
+"id": 36,
+"level": "초급",
+"topic": "설정",
+"title": "Actuator 열기",
+"desc": "Actuator 로 /actuator/health 를 열고 상세 정보까지 노출하세요. 필요한 의존성과 설정을 쓰세요.",
+"hint": "spring-boot-starter-actuator, management.*",
+"checklist": [
+"spring-boot-starter-actuator 의존성",
+"management.endpoints.web.exposure.include=health,info",
+"management.endpoint.health.show-details=always"
+],
+"solution": "// Maven: spring-boot-starter-actuator\n\n# application.properties\nmanagement.endpoints.web.exposure.include=health,info\nmanagement.endpoint.health.show-details=always"
+},
+{
+"id": 37,
+"level": "중급",
+"topic": "AOP",
+"title": "실행시간 측정 AOP",
+"desc": "service 패키지의 모든 메서드 실행 시간을 로그로 남기는 AOP 를 작성하세요.",
+"hint": "spring-boot-starter-aop, @Aspect, @Around, ProceedingJoinPoint",
+"checklist": [
+"@Aspect + @Component",
+"@Around 포인트컷 지정",
+"pjp.proceed() 호출 후 반환값 반환",
+"finally 에서 시간 로그"
+],
+"solution": "@Aspect\n@Component\npublic class TimeAspect {\n    private static final Logger log = LoggerFactory.getLogger(TimeAspect.class);\n\n    @Around(\"execution(* study.quiz.service..*(..))\")\n    public Object time(ProceedingJoinPoint pjp) throws Throwable {\n        long start = System.currentTimeMillis();\n        try {\n            return pjp.proceed();\n        } finally {\n            log.info(\"{} {}ms\", pjp.getSignature(), System.currentTimeMillis() - start);\n        }\n    }\n}"
+},
+{
+"id": 38,
+"level": "중급",
+"topic": "스케줄링",
+"title": "@Scheduled",
+"desc": "매일 오전 9시에 cleanup() 을 실행하세요. 스케줄링을 켜는 설정도 포함합니다.",
+"hint": "@EnableScheduling, cron 표현식(초 분 시 일 월 요일)",
+"checklist": [
+"@EnableScheduling",
+"@Scheduled(cron = \"0 0 9 * * *\")",
+"빈(@Component)으로 등록"
+],
+"solution": "@Configuration\n@EnableScheduling\npublic class SchedulingConfig {}\n\n@Component\npublic class CleanupJob {\n    @Scheduled(cron = \"0 0 9 * * *\")\n    public void cleanup() {\n        // ...\n    }\n}"
+},
+{
+"id": 39,
+"level": "중급",
+"topic": "캐시",
+"title": "@Cacheable",
+"desc": "BookService.findById 결과를 books 캐시에 id 기준으로 저장하고, 수정 시 해당 캐시를 지우세요.",
+"hint": "@EnableCaching, @Cacheable, @CacheEvict",
+"checklist": [
+"@EnableCaching",
+"@Cacheable(value=\"books\", key=\"#id\")",
+"@CacheEvict 로 수정 시 삭제"
+],
+"solution": "@Configuration\n@EnableCaching\npublic class CacheConfig {}\n\n@Service\npublic class BookService {\n    @Cacheable(value = \"books\", key = \"#id\")\n    public Book findById(Long id) {\n        return repo.findById(id).orElseThrow();\n    }\n\n    @CacheEvict(value = \"books\", key = \"#book.id\")\n    public Book update(Book book) {\n        return repo.save(book);\n    }\n}"
+},
+{
+"id": 40,
+"level": "중급",
+"topic": "설정",
+"title": "프로파일 분리",
+"desc": "dev 프로파일에서만 DevDataLoader 빈이 등록되고 application-dev.yml 에서 포트가 8081 이 되도록 하세요. dev 활성화 방법도 쓰세요.",
+"hint": "@Profile, spring.profiles.active",
+"checklist": [
+"@Profile(\"dev\")",
+"application-dev.yml 에 server.port: 8081",
+"spring.profiles.active=dev 로 활성화"
+],
+"solution": "@Component\n@Profile(\"dev\")\npublic class DevDataLoader implements CommandLineRunner {\n    @Override\n    public void run(String... args) {\n        // 샘플 데이터 저장\n    }\n}\n\n# application-dev.yml\nserver:\n  port: 8081\n\n# 활성화: application.properties 에 spring.profiles.active=dev\n# 또는 실행 인자 --spring.profiles.active=dev"
+},
+{
+"id": 41,
+"level": "중급",
+"topic": "이벤트",
+"title": "애플리케이션 이벤트",
+"desc": "MemberService.join 후 MemberJoinedEvent 를 발행하고, 리스너에서 환영 로그를 남기세요.",
+"hint": "ApplicationEventPublisher, @EventListener",
+"checklist": [
+"ApplicationEventPublisher 주입",
+"publishEvent 호출",
+"@EventListener 메서드"
+],
+"solution": "public record MemberJoinedEvent(String name) {}\n\n@Service\npublic class MemberService {\n    private final ApplicationEventPublisher publisher;\n\n    public MemberService(ApplicationEventPublisher publisher) {\n        this.publisher = publisher;\n    }\n\n    public void join(String name) {\n        // 저장 로직...\n        publisher.publishEvent(new MemberJoinedEvent(name));\n    }\n}\n\n@Component\npublic class WelcomeListener {\n    @EventListener\n    public void on(MemberJoinedEvent e) {\n        System.out.println(\"welcome \" + e.name());\n    }\n}"
+},
+{
+"id": 42,
+"level": "중급",
+"topic": "Controller",
+"title": "파일 업로드",
+"desc": "POST /upload 로 file 파트를 받아 원본 파일명과 크기를 문자열로 반환하세요.",
+"hint": "MultipartFile",
+"checklist": [
+"MultipartFile 파라미터",
+"@RequestParam(\"file\") 이름 일치",
+"getOriginalFilename(), getSize() 사용"
+],
+"solution": "@PostMapping(\"/upload\")\npublic String upload(@RequestParam(\"file\") MultipartFile file) {\n    return file.getOriginalFilename() + \" (\" + file.getSize() + \" bytes)\";\n}"
+},
+{
+"id": 43,
+"level": "고급",
+"topic": "비동기",
+"title": "@Async",
+"desc": "메일 발송을 별도 스레드에서 실행하고 결과를 CompletableFuture 로 반환하세요.",
+"hint": "@EnableAsync, @Async",
+"checklist": [
+"@EnableAsync",
+"@Async 메서드",
+"CompletableFuture 반환",
+"같은 클래스 내부 호출은 비동기가 안 됨을 인지"
+],
+"solution": "@Configuration\n@EnableAsync\npublic class AsyncConfig {}\n\n@Service\npublic class MailService {\n    @Async\n    public CompletableFuture<String> send(String to) {\n        // 오래 걸리는 작업\n        return CompletableFuture.completedFuture(\"sent to \" + to);\n    }\n}"
+},
+{
+"id": 44,
+"level": "고급",
+"topic": "외부 API",
+"title": "RestClient 호출",
+"desc": "RestClient 로 https://api.example.com/users/{id} 를 GET 호출해 UserDto 로 받으세요.",
+"hint": "RestClient.create, retrieve().body()",
+"checklist": [
+"RestClient 생성",
+"uri 템플릿 변수 사용",
+"retrieve().body(UserDto.class)"
+],
+"solution": "public record UserDto(Long id, String name) {}\n\n@Service\npublic class UserClient {\n    private final RestClient client = RestClient.create(\"https://api.example.com\");\n\n    public UserDto find(Long id) {\n        return client.get().uri(\"/users/{id}\", id).retrieve().body(UserDto.class);\n    }\n}"
+},
+{
+"id": 45,
+"level": "고급",
+"topic": "테스트",
+"title": "Mockito 서비스 테스트",
+"desc": "BookService.findById 가 Repository 의 Book 을 반환하는지 Mockito 로 Repository 를 모킹해 테스트하세요.",
+"hint": "@ExtendWith(MockitoExtension.class), @Mock, @InjectMocks, given",
+"checklist": [
+"@ExtendWith(MockitoExtension.class)",
+"@Mock + @InjectMocks",
+"given(...).willReturn(...)",
+"결과 검증(assertThat)"
+],
+"solution": "@ExtendWith(MockitoExtension.class)\nclass BookServiceTest {\n    @Mock BookRepository repo;\n    @InjectMocks BookService service;\n\n    @Test\n    void findById() {\n        given(repo.findById(1L)).willReturn(Optional.of(new Book(\"spring\", 1000)));\n\n        Book found = service.findById(1L);\n\n        assertThat(found.getTitle()).isEqualTo(\"spring\");\n    }\n}"
+},
+{
+"id": 46,
+"level": "고급",
+"topic": "테스트",
+"title": "@DataJpaTest",
+"desc": "BookRepository.findByTitle 이 저장한 Book 을 찾는지 JPA 슬라이스 테스트로 검증하세요.",
+"hint": "@DataJpaTest",
+"checklist": [
+"@DataJpaTest",
+"Repository 주입 후 save",
+"findByTitle 결과 검증"
+],
+"solution": "@DataJpaTest\nclass BookRepositoryTest {\n    @Autowired BookRepository repo;\n\n    @Test\n    void findByTitle() {\n        repo.save(new Book(\"spring\", 1000));\n\n        List<Book> result = repo.findByTitle(\"spring\");\n\n        assertThat(result).hasSize(1);\n    }\n}"
+},
+{
+"id": 47,
+"level": "고급",
+"topic": "JPA",
+"title": "낙관적 락",
+"desc": "같은 Product 를 동시에 수정할 때 충돌을 감지하도록 낙관적 락을 적용하고, 충돌 시 예외 이름을 쓰세요.",
+"hint": "@Version",
+"checklist": [
+"@Version 필드",
+"충돌 예외: ObjectOptimisticLockingFailureException (JPA: OptimisticLockException)"
+],
+"solution": "@Entity\npublic class Product {\n    @Id @GeneratedValue private Long id;\n    private int stock;\n\n    @Version\n    private Long version;\n}\n// 충돌 시: ObjectOptimisticLockingFailureException (JPA: OptimisticLockException)"
+},
+{
+"id": 48,
+"level": "고급",
+"topic": "JPA",
+"title": "값 타입 @Embedded",
+"desc": "Member 에 Address(city, street) 값 타입을 포함해 같은 테이블 컬럼으로 저장하세요.",
+"hint": "@Embeddable, @Embedded",
+"checklist": [
+"@Embeddable Address",
+"Member 에 @Embedded",
+"Address 기본 생성자"
+],
+"solution": "@Embeddable\npublic class Address {\n    private String city;\n    private String street;\n\n    protected Address() {}\n\n    public Address(String city, String street) {\n        this.city = city;\n        this.street = street;\n    }\n}\n\n@Entity\npublic class Member {\n    @Id @GeneratedValue private Long id;\n    @Embedded\n    private Address address;\n}"
+}
+]

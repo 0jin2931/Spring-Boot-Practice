@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>스프링 실기</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{--bg:#f4f5f7;--side:#fafafb;--panel:#fff;--line:#e5e8ec;--line2:#c9cfd8;--ink:#0f1f17;--mute:#667085;
+ --acc:#1f8a4c;--acc-ink:#fff;--acc-soft:#e7f5ed;--bad:#d64545;--bad-soft:#fdeceb;--star:#d49a00;--hint:#fff6df;--code:#0e1a14;
+ --ui:"Pretendard Variable",Pretendard,system-ui,"Malgun Gothic",sans-serif;--mono:"JetBrains Mono","D2Coding",Consolas,monospace}
+@media(prefers-color-scheme:dark){:root{--bg:#0a0f0c;--side:#0d130f;--panel:#111912;--line:#223027;--line2:#35493c;--ink:#e6efe9;--mute:#8da295;
+ --acc:#46c47c;--acc-ink:#04170b;--acc-soft:#12301f;--bad:#ff7b72;--bad-soft:#3a1d1b;--star:#f0b72f;--hint:#2b2512;--code:#0a110c}}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font:15px/1.6 var(--ui);letter-spacing:-.01em;background:var(--bg);color:var(--ink);overflow:hidden;-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;letter-spacing:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.app{display:grid;grid-template-columns:340px minmax(0,1fr);height:100vh;height:100dvh}
+
+/* 사이드바 */
+.side{display:flex;flex-direction:column;min-height:0;background:var(--side);border-right:1px solid var(--line)}
+.side.lock{pointer-events:none;opacity:.5}
+.brand{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 10px}
+.logo{display:flex;align-items:center;gap:9px;border:0;background:none;padding:0;font-weight:800;font-size:18px;letter-spacing:-.03em;cursor:pointer}
+.logo::before{content:"";width:11px;height:11px;border-radius:50%;background:var(--acc)}
+#sc{color:var(--mute);font-size:13px;font-variant-numeric:tabular-nums}
+.prog{height:4px;margin:0 20px 16px;border-radius:4px;background:var(--line);overflow:hidden}
+.prog i{display:block;height:100%;width:var(--w,0%);background:var(--acc);border-radius:4px;transition:width .3s}
+.filters{padding:0 16px 10px;display:grid;gap:8px}
+.seg{display:grid;grid-template-columns:repeat(4,1fr);padding:3px;border-radius:10px;background:var(--line)}
+.seg button{border:0;background:none;padding:6px 0;border-radius:8px;font-size:13px;font-weight:600;color:var(--mute);cursor:pointer}
+.seg button.on{background:var(--panel);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.sel3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+select,#q{width:100%;min-width:0;padding:7px 8px;font-size:13px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+select option{background:var(--panel);color:var(--ink)}
+#q{padding:8px 12px}
+#lst{flex:1;overflow-y:auto;padding:6px 8px 24px}
+.none{padding:20px 12px;color:var(--mute);font-size:14px}
+.it{display:flex;align-items:center;gap:12px;width:100%;padding:9px 12px;border:0;border-radius:10px;background:none;text-align:left;cursor:pointer}
+.it:hover{background:var(--bg)}
+.it.on{background:var(--acc-soft)}
+.tx{flex:1;min-width:0}
+.tx b{display:block;font-size:14.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tx small{display:flex;align-items:center;gap:8px;color:var(--mute);font-size:12.5px}
+.ty{border:1px solid var(--line2);border-radius:4px;padding:0 5px;font-size:11px;line-height:16px}
+.st{color:var(--star);font-size:13px}
+.ic{flex:none;display:grid;place-items:center;width:18px;height:18px;border-radius:50%;border:1.5px solid var(--line2)}
+.ic svg{width:12px;height:12px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ic.ok{background:var(--acc);border-color:var(--acc)}.ic.ok svg{stroke:var(--acc-ink)}
+.ic.no{background:var(--bad);border-color:var(--bad)}.ic.no svg{stroke:#fff}
+.dots{display:inline-flex;gap:2px;align-items:center}
+.dots i{width:5px;height:5px;border-radius:50%;background:var(--line2)}
+.d1 i:nth-child(1),.d2 i:nth-child(-n+2),.d3 i{background:var(--ink)}
+
+/* 메인 */
+.main{overflow:auto;min-width:0}
+.pad{max-width:1180px;margin:0 auto;padding:40px 44px 90px}
+.mbar,.bd{display:none}
+h1{margin:0;font-size:34px;line-height:1.2;font-weight:800;letter-spacing:-.035em}
+h2{margin:44px 0 14px;font-size:17px;font-weight:700;letter-spacing:-.02em}
+.sub{margin:10px 0 24px;color:var(--mute);font-size:16px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border:1px solid var(--line2);border-radius:10px;background:var(--panel);font-size:14px;font-weight:600;cursor:pointer;transition:background .12s,border-color .12s}
+.btn:hover{border-color:var(--ink)}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
+.btn.pri:hover{filter:brightness(.94)}
+.btn.big{flex-direction:column;align-items:flex-start;gap:0;padding:12px 22px}
+.btn.big small{font-weight:400;font-size:12.5px;opacity:.85}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--mute);padding-left:0}
+.btn.ghost:hover{color:var(--ink)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.cta{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.exam{display:flex;align-items:center;gap:8px;margin-left:6px}
+.exam select{width:auto;padding:9px 10px;font-size:14px;border-radius:10px;border-color:var(--line2)}
+.hintline{margin:10px 0 0;color:var(--mute);font-size:13px}
+
+.legend{display:flex;gap:16px;margin:-6px 0 14px;color:var(--mute);font-size:13px}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px;border:1px solid var(--line2)}
+.legend .l1::before{background:var(--acc);border-color:var(--acc)}.legend .l2::before{background:var(--bad-soft);border-color:var(--bad)}
+.mrow{display:grid;grid-template-columns:44px 1fr;gap:10px;align-items:start;margin-bottom:12px}
+.mrow>span{padding-top:5px;color:var(--mute);font-size:13px;font-weight:600}
+.pips{display:flex;flex-wrap:wrap;gap:6px}
+.pip{width:34px;height:34px;padding:0;border:1px solid var(--line2);border-radius:8px;background:var(--panel);color:var(--mute);font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;cursor:pointer}
+.pip:hover{border-color:var(--ink)}
+.pip.ok{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
+.pip.no{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
+.wk{display:grid;grid-template-columns:130px 1fr 110px;gap:14px;align-items:center;padding:7px 0;font-size:14px}
+.wk small{color:var(--mute);text-align:right}
+.meter{height:8px;border-radius:8px;background:var(--line);overflow:hidden}
+.meter i{display:block;height:100%;width:var(--w);background:var(--acc);border-radius:8px}
+.meter i.low{background:var(--bad)}
+.empty{color:var(--mute)}
+
+/* 문제 화면 */
+.prob{display:grid;grid-template-columns:minmax(0,1fr);gap:28px}
+.stmt .no{display:block;margin-bottom:6px;color:var(--mute);font-size:13px;font-weight:600}
+.stmt h1{font-size:27px;line-height:1.3}
+.meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;margin:12px 0 18px;color:var(--mute);font-size:13px}
+.meta span{display:inline-flex;align-items:center;gap:6px}
+.desc{margin:0;font-size:16px;line-height:1.85}
+.hint{margin:20px 0 14px;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+.hint[open]{background:var(--hint);border-color:transparent}
+.hint summary{cursor:pointer;font-weight:600;font-size:14px}
+.hint p{margin:8px 0 2px}
+#code{height:min(460px,60vh);border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--panel)}
+.acts{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 0}
+.codebox{margin:0;padding:18px 20px;border-radius:14px;background:var(--code);color:#e5efe8;font:13.5px/1.75 var(--mono);overflow:auto;white-space:pre}
+.bl{min-width:90px;padding:2px 8px;border:1px solid #3b5547;border-radius:6px;background:#16251c;color:#e5efe8;font:13.5px var(--mono)}
+.bl.good{border-color:#46c47c;background:#14301f}.bl.bad{border-color:#ff7b72;background:#3a1d1b}
+.res{margin-top:16px;padding:18px 20px;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
+.res h3{margin:0 0 10px;font-size:15px;font-weight:700}
+.res h3:not(:first-child){margin-top:20px}
+.res p{margin:0 0 8px;color:var(--mute);font-size:14px}
+.res pre{margin:0;padding:14px 16px;border-radius:10px;background:var(--code);color:#e5efe8;font:13.5px/1.65 var(--mono);overflow:auto}
+.res pre.ai{white-space:pre-wrap;background:var(--acc-soft);color:var(--ink);font:14.5px/1.75 var(--ui)}
+.ck{display:flex;gap:10px;align-items:flex-start;padding:4px 0;cursor:pointer}
+.ck input{margin-top:5px;width:16px;height:16px;accent-color:var(--acc)}
+.verdict{display:flex;align-items:center;gap:12px;padding:14px 16px;margin-top:16px;border-radius:12px;animation:rise .24s ease-out}
+.verdict.ok{background:var(--acc-soft)}.verdict.no{background:var(--bad-soft)}
+.verdict .ic{width:28px;height:28px}.verdict .ic svg{width:18px;height:18px}
+.verdict b{display:block;font-size:16px}.verdict small{color:var(--mute)}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}}
+@media(prefers-reduced-motion:reduce){.verdict{animation:none}.prog i{transition:none}}
+
+.xs{position:sticky;top:0;z-index:4;display:flex;align-items:center;gap:18px;padding:10px 14px;margin:0 0 22px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+.segs{display:flex;gap:4px;flex:1}
+.segs i{flex:1;height:6px;border-radius:3px;background:var(--line)}
+.segs i.cur{background:var(--ink)}.segs i.ok{background:var(--acc)}.segs i.no{background:var(--bad)}
+.xs b{font-variant-numeric:tabular-nums}
+.score{margin:12px 0 26px;font-size:18px;color:var(--mute)}
+.score b{font-size:44px;color:var(--ink);letter-spacing:-.04em}
+.rl .it{cursor:default}.rl .it:hover{background:none}
+
+@media(min-width:1180px){
+ .prob{grid-template-columns:minmax(300px,380px) minmax(0,1fr);gap:36px}
+ .stmt{position:sticky;top:0;align-self:start}
+}
+@media(max-width:900px){
+ .app{grid-template-columns:minmax(0,1fr)}
+ .side{position:fixed;z-index:30;top:0;bottom:0;left:0;width:min(340px,88vw);transform:translateX(-100%);transition:transform .2s}
+ .side.open{transform:none;box-shadow:0 0 40px rgba(0,0,0,.3)}
+ .bd.on{display:block;position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.4)}
+ .mbar{display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--bg);font-weight:800}
+ .pad{padding:24px 16px 70px}
+ h1{font-size:27px}.wk{grid-template-columns:90px 1fr 70px}.wk small{display:none}
+ .exam{margin-left:0}
+}
+</style></head><body>
+<div class="app">
+ <aside class="side" id="side"></aside>
+ <main class="main" id="main">
+  <header class="mbar"><button class="btn" onclick="toggleSide(true)">문제 목록</button>스프링 실기</header>
+  <div class="pad" id="view"></div>
+ </main>
+</div>
+<div class="bd" id="bd" onclick="toggleSide(false)"></div>
+<script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/loader.js"></script>
+<script>
+let ed;
+require.config({paths:{vs:'https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs'}});
+// 자동완성 스니펫: [입력어, 삽입 템플릿]
+const SN=[
+['@RestController','@RestController'],['@Controller','@Controller'],['@Service','@Service'],['@Repository','@Repository'],['@Component','@Component'],
+['@Entity','@Entity'],['@Id','@Id'],['@GeneratedValue','@GeneratedValue(strategy = GenerationType.IDENTITY)'],
+['@GetMapping','@GetMapping("${1:/path}")'],['@PostMapping','@PostMapping("${1:/path}")'],
+['@PutMapping','@PutMapping("${1:/path}")'],['@DeleteMapping','@DeleteMapping("${1:/path}")'],
+['@PathVariable','@PathVariable ${1:Long} ${2:id}'],['@RequestParam','@RequestParam(defaultValue = "${1}") ${2:String} ${3:name}'],
+['@RequestBody','@RequestBody ${1:Dto} ${2:req}'],['@Valid','@Valid'],['@NotBlank','@NotBlank'],['@Min','@Min(${1:1})'],
+['@Transactional','@Transactional(rollbackFor = Exception.class)'],['@RestControllerAdvice','@RestControllerAdvice'],
+['@ExceptionHandler','@ExceptionHandler(${1:Exception}.class)'],['@Query','@Query("${1:select e from Entity e}")'],
+['@Autowired','@Autowired'],['@Configuration','@Configuration'],['@Bean','@Bean'],['@Value','@Value("${${1:key}:${2:default}}")'],
+['@OneToMany','@OneToMany(mappedBy = "${1}", fetch = FetchType.LAZY)'],['@ManyToOne','@ManyToOne(fetch = FetchType.LAZY)\n@JoinColumn(name = "${1}_id")'],
+['@Embedded','@Embedded'],['@Embeddable','@Embeddable'],['@Version','@Version\nprivate Long version;'],
+['@Aspect','@Aspect'],['@Around','@Around("execution(* ${1:study}..*(..))")'],
+['@Scheduled','@Scheduled(cron = "${1:0 0 9 * * *}")'],['@EnableScheduling','@EnableScheduling'],
+['@Cacheable','@Cacheable(value = "${1:name}", key = "#${2:id}")'],['@CacheEvict','@CacheEvict(value = "${1:name}", key = "#${2:id}")'],['@EnableCaching','@EnableCaching'],
+['@Async','@Async'],['@EnableAsync','@EnableAsync'],['@EventListener','@EventListener'],['@Profile','@Profile("${1:dev}")'],
+['@Test','@Test\nvoid ${1:name}() {\n    $0\n}'],['@Mock','@Mock'],['@InjectMocks','@InjectMocks'],
+['@WebMvcTest','@WebMvcTest(${1:Controller}.class)'],['@DataJpaTest','@DataJpaTest'],['@ExtendWith','@ExtendWith(MockitoExtension.class)'],
+['ResponseEntity','ResponseEntity<${1:Void}>'],['ResponseEntity.status','ResponseEntity.status(HttpStatus.${1:CREATED}).build()'],
+['JpaRepository','JpaRepository<${1:Entity}, ${2:Long}>'],['Pageable','Pageable pageable'],['MultipartFile','MultipartFile file'],
+['RestClient','RestClient.create("${1:https://}")'],['CompletableFuture','CompletableFuture<${1:String}>'],
+['controller','@RestController\npublic class ${1:Name}Controller {\n    $0\n}'],
+['repository','public interface ${1:Name}Repository extends JpaRepository<${1:Name}, Long> {\n    $0\n}'],
+['entity','@Entity\npublic class ${1:Name} {\n    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)\n    private Long id;\n    $0\n}'],
+['service','@Service\npublic class ${1:Name}Service {\n    $0\n}'],
+['record','public record ${1:Name}(${2:String field}) {}']];
+const M=new Promise(r=>require(['vs/editor/editor.main'],()=>{
+ monaco.editor.defineTheme('sp-light',{base:'vs',inherit:true,rules:[],colors:{'editor.background':'#ffffff','editor.lineHighlightBackground':'#00000000','editorLineNumber.foreground':'#b3bcc8'}});
+ monaco.editor.defineTheme('sp-dark',{base:'vs-dark',inherit:true,rules:[],colors:{'editor.background':'#111912','editor.lineHighlightBackground':'#00000000','editorLineNumber.foreground':'#4b6254'}});
+ monaco.languages.registerCompletionItemProvider('java',{triggerCharacters:['@'],provideCompletionItems(m,pos){
+  const w=m.getWordUntilPosition(pos),at=m.getValueInRange({startLineNumber:pos.lineNumber,startColumn:w.startColumn-1,endLineNumber:pos.lineNumber,endColumn:w.startColumn})=='@';
+  const range={startLineNumber:pos.lineNumber,endLineNumber:pos.lineNumber,startColumn:w.startColumn-(at?1:0),endColumn:w.endColumn};
+  return{suggestions:SN.map(([l,t])=>({label:l,kind:monaco.languages.CompletionItemKind.Snippet,insertText:t,
+   insertTextRules:monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,range}))}}});
+ r(monaco)}));
+
+let P=[],f={level:'',topic:'',type:'',st:''},q='',cur=null,ex=null,timer=null,gd=false;
+const SD=document.getElementById('side'),MN=document.getElementById('main'),V=document.getElementById('view'),BD=document.getElementById('bd');
+let LST;
+const TL={code:'코드 작성',fix:'오류 찾기',blank:'빈칸'};
+const typ=p=>p.type||'code';
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const fmt=ms=>{const s=Math.max(0,Math.ceil(ms/1000));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')};
+const shuffle=a=>a.map(x=>[Math.random(),x]).sort((p,q)=>p[0]-q[0]).map(x=>x[1]);
+const pid=id=>P.find(x=>x.id==id);
+const LV={초급:1,중급:2,고급:3};
+const dots=l=>`<span class="dots d${LV[l]}" title="${l}" aria-label="${l}"><i></i><i></i><i></i></span>`;
+const ico=st=>st=='ok'?'<span class="ic ok"><svg viewBox="0 0 16 16"><path d="M4 8.5l2.5 2.5L12 5.5"/></svg></span>'
+ :st=='no'?'<span class="ic no"><svg viewBox="0 0 16 16"><path d="M5 5l6 6M11 5l-6 6"/></svg></span>':'<span class="ic"></span>';
+const favTxt=on=>on?'★ 즐겨찾기 해제':'☆ 즐겨찾기';
+// 진행 기록: {id:{ok,tries,wrong,fav}}
+const G=()=>{try{return JSON.parse(localStorage.getItem('p2'))||{}}catch{return{}}};
+const rec=(id,fn)=>{const g=G();g[id]=fn(g[id]||{});try{localStorage.setItem('p2',JSON.stringify(g))}catch{}};
+const stOf=(g,id)=>{const s=g[id]||{};return s.tries?(s.ok?'ok':'no'):''};
+
+function filtered(){const g=G();return P.filter(p=>{const s=g[p.id]||{};
+ return(!f.level||p.level==f.level)&&(!f.topic||p.topic==f.topic)&&(!f.type||typ(p)==f.type)&&
+ (!q||(p.title+' '+p.topic).toLowerCase().includes(q))&&
+ (!f.st||(f.st=='todo'&&!s.tries)||(f.st=='wrong'&&s.tries&&!s.ok)||(f.st=='fav'&&s.fav)||(f.st=='done'&&s.ok))})}
+
+/* ---------- 사이드바 ---------- */
+function buildSide(){
+ const topics=[...new Set(P.map(p=>p.topic))];
+ const opt=(k,all,items)=>`<select aria-label="${all}" data-k="${k}"><option value="">${all}</option>`+items.map(([v,l])=>`<option value="${esc(v)}">${esc(l)}</option>`).join('')+'</select>';
+ SD.innerHTML=`<div class="brand"><button class="logo" onclick="home()">스프링 실기</button><span id="sc"></span></div>
+ <div class="prog"><i id="pg"></i></div>
+ <div class="filters"><div class="seg" id="lvseg">${['','초급','중급','고급'].map(v=>`<button data-v="${v}">${v||'전체'}</button>`).join('')}</div>
+ <div class="sel3">${opt('topic','전체 주제',topics.map(x=>[x,x]))}${opt('type','전체 유형',Object.entries(TL))}${opt('st','전체 상태',[['todo','안 푼 문제'],['wrong','오답 노트'],['fav','즐겨찾기'],['done','완료']])}</div>
+ <input id="q" type="search" placeholder="문제 제목이나 주제 검색" aria-label="문제 검색"></div><div id="lst"></div>`;
+ LST=document.getElementById('lst');
+ SD.addEventListener('change',e=>{const k=e.target.dataset.k;if(k){f[k]=e.target.value;renderList()}});
+ document.getElementById('lvseg').onclick=e=>{const v=e.target.dataset.v;if(v===undefined)return;f.level=v;syncFilters();renderList()};
+ document.getElementById('q').oninput=e=>{q=e.target.value.trim().toLowerCase();renderList()};
+ syncFilters();
+}
+function syncFilters(){
+ document.querySelectorAll('#lvseg button').forEach(b=>b.classList.toggle('on',b.dataset.v==f.level));
+ SD.querySelectorAll('select[data-k]').forEach(s=>s.value=f[s.dataset.k]);
+}
+function renderList(){
+ const g=G(),sh=filtered();
+ LST.innerHTML=sh.length?sh.map(p=>{const s=g[p.id]||{};
+  return`<button class="it ${cur==p.id?'on':''}" onclick="go(${p.id})">${ico(stOf(g,p.id))}
+  <span class="tx"><b>${esc(p.title)}</b><small>${dots(p.level)}${esc(p.topic)}${typ(p)!='code'?`<span class="ty">${TL[typ(p)]}</span>`:''}</small></span>${s.fav?'<span class="st">★</span>':''}</button>`}).join('')
+  :'<p class="none">조건에 맞는 문제가 없습니다.<br>필터를 바꾸거나 검색어를 지워 보세요.</p>';
+ const n=P.filter(p=>(g[p.id]||{}).ok).length;
+ document.getElementById('sc').textContent=`${n} / ${P.length} 완료`;
+ document.getElementById('pg').style.setProperty('--w',(P.length?n/P.length*100:0)+'%');
+}
+function toggleSide(on){SD.classList.toggle('open',on);BD.classList.toggle('on',on)}
+function setLock(){SD.classList.toggle('lock',!!ex)}
+
+/* ---------- 홈 ---------- */
+function home(){
+ ed?.dispose();ed=null;clearInterval(timer);ex=null;cur=null;setLock();toggleSide(false);
+ const g=G(),tried=P.filter(p=>(g[p.id]||{}).tries),wrong=P.filter(p=>stOf(g,p.id)=='no'),ok=P.filter(p=>stOf(g,p.id)=='ok');
+ const next=P.find(p=>!(g[p.id]||{}).tries)||wrong[0]||P[0];
+ const topics=[...new Set(P.map(p=>p.topic))].map(t=>{let tr=0,wr=0;P.filter(p=>p.topic==t).forEach(p=>{const s=g[p.id]||{};tr+=s.tries||0;wr+=s.wrong||0});
+  return{t,tr,pct:tr?Math.round((tr-wr)/tr*100):0}}).filter(x=>x.tr).sort((a,b)=>a.pct-b.pct).slice(0,6);
+ const map=['초급','중급','고급'].map(l=>`<div class="mrow"><span>${l}</span><div class="pips">`+
+  P.filter(p=>p.level==l).map(p=>`<button class="pip ${stOf(g,p.id)}" title="${p.id}. ${esc(p.title)}" onclick="go(${p.id})">${p.id}</button>`).join('')+`</div></div>`).join('');
+ V.innerHTML=`<h1>오늘은 무엇을 연습할까요?</h1>
+ <p class="sub">${tried.length?`${ok.length}문제를 맞혔고, ${wrong.length}문제는 다시 풀어볼 만합니다.`:`문제는 총 ${P.length}개입니다. 첫 문제부터 시작해 보세요.`}</p>
+ <div class="cta"><button class="btn pri big" onclick="go(${next.id})">${tried.length?'이어서 풀기':'첫 문제 시작'}<small>${next.id}. ${esc(next.title)}</small></button>
+ <button class="btn" onclick="rand()">랜덤 문제</button>
+ <button class="btn" onclick="reviewWrong()" ${wrong.length?'':'disabled'}>오답 복습 ${wrong.length}</button>
+ <span class="exam"><select id="exn" aria-label="모의고사 문항 수"><option value="5">5문제</option><option value="10">10문제</option></select><button class="btn" onclick="startExam()">모의고사 시작</button></span></div>
+ <p class="hintline">랜덤 문제와 모의고사는 왼쪽 필터에 맞는 문제에서 출제되고, 모의고사는 문제당 5분입니다.</p>
+ <h2>문제 지도</h2><div class="legend"><span class="l1">맞힘</span><span class="l2">틀림</span><span>안 품</span></div>${map}
+ <h2>정답률이 낮은 주제</h2>`+
+ (topics.length?topics.map(x=>`<div class="wk"><span>${esc(x.t)}</span><span class="meter"><i class="${x.pct<60?'low':''}" style="--w:${x.pct}%"></i></span><small>${x.pct}%, ${x.tr}회 풀이</small></div>`).join('')
+  :'<p class="empty">문제를 풀면 주제별 정답률이 여기에 표시됩니다.</p>');
+ MN.scrollTop=0;renderList();
+}
+function reviewWrong(){f.st='wrong';syncFilters();renderList();const g=G(),w=P.find(p=>stOf(g,p.id)=='no');if(w)go(w.id)}
+function rand(){const s=filtered();if(!s.length)return alert('조건에 맞는 문제가 없습니다. 필터를 바꿔 보세요.');go(s[Math.floor(Math.random()*s.length)].id)}
+function go(id){cur=id;toggleSide(false);openP(id);renderList();LST.querySelector('.on')?.scrollIntoView({block:'nearest'})}
+
+/* ---------- 모의고사 ---------- */
+function startExam(){
+ const pool=shuffle(filtered()).slice(0,+document.getElementById('exn').value);
+ if(!pool.length)return alert('조건에 맞는 문제가 없습니다. 필터를 바꿔 보세요.');
+ ex={ids:pool.map(p=>p.id),i:0,res:{},end:Date.now()+pool.length*5*60000};
+ clearInterval(timer);timer=setInterval(tick,1000);nextQ();
+}
+function tick(){if(!ex)return clearInterval(timer);if(ex.end-Date.now()<=0)return result();
+ const el=document.getElementById('tm');if(el)el.textContent=fmt(ex.end-Date.now())}
+function nextQ(){ex.i>=ex.ids.length?result():go(ex.ids[ex.i++])}
+function result(){
+ clearInterval(timer);const e=ex;ex=null;cur=null;ed?.dispose();ed=null;setLock();
+ const ok=Object.values(e.res).filter(Boolean).length,g=G();
+ V.innerHTML=`<h1>모의고사 결과</h1><p class="score"><b>${ok}</b> / ${e.ids.length} 정답</p><div class="rl">`+
+ e.ids.map(id=>{const p=pid(id),r=e.res[id];
+  return`<div class="it">${ico(r===undefined?'':r?'ok':'no')}<span class="tx"><b>${p.id}. ${esc(p.title)}</b><small>${r===undefined?'풀지 않음':esc(p.topic)}</small></span></div>`}).join('')+
+ `</div><p style="margin-top:24px"><button class="btn pri" onclick="home()">홈으로</button></p>`;
+ MN.scrollTop=0;renderList();
+}
+
+/* ---------- 문제 화면 ---------- */
+function openP(id){
+ ed?.dispose();ed=null;gd=false;setLock();
+ const p=pid(id),s=G()[id]||{},t=typ(p);
+ const strip=ex?`<div class="xs"><div class="segs">${ex.ids.map((x,i)=>`<i class="${ex.res[x]===true?'ok':ex.res[x]===false?'no':i==ex.i-1?'cur':''}"></i>`).join('')}</div>
+  <span>남은 시간 <b id="tm">${fmt(ex.end-Date.now())}</b></span><button class="btn" onclick="result()">시험 종료</button></div>`:'';
+ const body=t=='blank'
+  ?`<pre class="codebox">${p.code.split('____').map(esc).reduce((a,x,i)=>a+(i?'<input class="bl" size="12" aria-label="빈칸 '+i+'">':'')+x,'')}</pre>
+    <div class="acts"><button class="btn pri" onclick="grade(${id})">채점하기</button></div>`
+  :`<div id="code"></div><div class="acts"><button class="btn pri" onclick="show(${id})">정답 확인</button><button class="btn" onclick="ai(${id})">AI 코드 리뷰</button></div>`;
+ V.innerHTML=`${strip}<div class="prob"><section class="stmt"><span class="no">문제 ${p.id}</span><h1>${esc(p.title)}</h1>
+ <div class="meta"><span>${dots(p.level)}${p.level}</span><span>${TL[t]}</span><span>${esc(p.topic)}</span></div>
+ <p class="desc">${esc(p.desc)}</p>
+ <details class="hint"><summary>힌트 보기</summary><p>${esc(p.hint)}</p></details>
+ <button class="btn ghost" onclick="fav(${id},this)">${favTxt(s.fav)}</button></section>
+ <section class="ws">${body}<div id="ans"></div><div id="aib"></div></section></div>`;
+ MN.scrollTop=0;
+ if(t!='blank'){
+  const el=document.getElementById('code');
+  M.then(m=>{if(!el.isConnected)return;let v=null;try{v=localStorage.getItem('code'+id)}catch{}
+   ed=m.editor.create(el,{value:v??p.starter??'',language:'java',theme:matchMedia('(prefers-color-scheme:dark)').matches?'sp-dark':'sp-light',
+    minimap:{enabled:false},fontSize:13.5,fontFamily:"'JetBrains Mono','D2Coding',Consolas,monospace",lineHeight:22,padding:{top:14,bottom:14},
+    automaticLayout:true,quickSuggestions:true,scrollBeyondLastLine:false,renderLineHighlight:'none',overviewRulerLanes:0,lineNumbersMinChars:3,
+    scrollbar:{verticalScrollbarSize:8,horizontalScrollbarSize:8}});
+   ed.onDidChangeModelContent(()=>{try{localStorage.setItem('code'+id,ed.getValue())}catch{}})});
+ }
+}
+function fav(id,b){rec(id,s=>({...s,fav:!s.fav}));b.textContent=favTxt((G()[id]||{}).fav);renderList()}
+function show(id){const p=pid(id);
+ document.getElementById('ans').innerHTML=`<div class="res"><h3>모범 답안</h3><pre>${esc(p.solution)}</pre><h3>자가 채점</h3><p>내 답안이 아래 항목을 모두 만족하면 체크하세요.</p>`+
+ p.checklist.map(c=>`<label class="ck"><input type="checkbox"><span>${esc(c)}</span></label>`).join('')+
+ `<div class="acts"><button class="btn pri" onclick="finish(${id})">채점 완료</button></div></div>`}
+function grade(id){const p=pid(id),n=s=>s.replace(/\s+/g,'');let hit=0;const els=[...document.querySelectorAll('.bl')];
+ els.forEach((el,i)=>{const good=p.answers[i].split('|').some(a=>n(a)==n(el.value));
+  el.classList.toggle('good',good);el.classList.toggle('bad',!good);hit+=good?1:0});
+ const ok=hit==els.length;
+ if(!gd){gd=true;rec(id,s=>({...s,ok,tries:(s.tries||0)+1,wrong:(s.wrong||0)+(ok?0:1)}));if(ex)ex.res[id]=ok;renderList()}
+ document.getElementById('ans').innerHTML=`<div class="verdict ${ok?'ok':'no'}">${ico(ok?'ok':'no')}<div><b>${ok?'정답입니다':'오답입니다'}</b><small>빈칸 ${els.length}개 중 ${hit}개를 맞혔습니다.</small></div></div>
+ <div class="res"><h3>모범 답안</h3><pre>${esc(p.solution)}</pre><div class="acts"><button class="btn pri" onclick="advance(${id})">다음 문제</button></div></div>`}
+function finish(id){
+ const ok=[...document.querySelectorAll('.ck input')].every(x=>x.checked);
+ rec(id,s=>({...s,ok,tries:(s.tries||0)+1,wrong:(s.wrong||0)+(ok?0:1)}));
+ if(ex)ex.res[id]=ok;
+ advance(id);
+}
+function advance(id){
+ if(ex)return nextQ();
+ const n=filtered().find(p=>p.id>id);
+ n?go(n.id):home();
+}
+async function ai(id){const p=pid(id),b=document.getElementById('aib');b.innerHTML='<div class="res"><pre class="ai">코드를 읽는 중입니다...</pre></div>';
+ try{const r=await fetch('/api/feedback',{method:'POST',headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({title:p.title,desc:p.desc,code:ed?ed.getValue():'',solution:p.solution})});
+  const j=await r.json();b.innerHTML=`<div class="res"><h3>AI 코드 리뷰</h3><pre class="ai">${esc(j.text)}</pre></div>`}
+ catch(e){b.innerHTML=`<div class="res"><pre class="ai">요청에 실패했습니다. 서버가 켜져 있는지 확인하세요. (${esc(e)})</pre></div>`}}
+
+fetch('problems.json').then(r=>r.json()).then(d=>{P=d;buildSide();home()});
+</script></body></html>
